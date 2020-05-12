@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>coronavırus</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="./covid19.mapbox.js"></script>
+
+</head>
+<style>
+    /* width */
+    ::-webkit-scrollbar {
+        width: 8px;
+
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+        background: #f7f5f5;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        background: rgb(134, 133, 133);
+        border-radius: 10px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgb(160, 159, 159);
+    }
+
+    .container {
+        grid-gap: 250px;
+    }
+
+    .item-container:hover {
+        background-color: antiquewhite;
+    }
+
+    #console {
+        position: absolute;
+        width: 240px;
+        margin: 10px;
+        margin-top: 30px;
+        padding: 5px;
+        background-color: transparent;
+
+    }
+
+    #console-row {
+        margin: 10px;
+    }
+
+    .dot {
+        height: 20px;
+        width: 20px;
+
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    #map {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+    }
+
+    #clustermap {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+
+    }
+
+    .total {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 15px;
+    }
+
+    .table {
+        font-family: 'Montserrat', sans-serif;
+        color: white;
+        border-collapse: collapse;
+    }
+
+    .anyClass {
+        height: 100vh;
+        overflow-y: scroll;
+    }
+
+    .coordinates {
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        position: absolute;
+        bottom: 40px;
+        left: 10px;
+        padding: 5px 10px;
+        margin: 0;
+        font-size: 11px;
+        line-height: 18px;
+        border-radius: 3px;
+        display: none;
+
+    }
+
+    .tab {
+        overflow: hidden;
+
+
+    }
+
+    .tab button {
+        background-color: inherit;
+        float: right;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 16px;
+        transition: 0.3s;
+        font-size: 16px;
+    }
+
+    .tab button:hover {
+        background-color: #00b8ff;
+    }
+
+    /* Create an active/current tablink class */
+    .tab button.active {
+        background-color: #0078ff;
+    }
+
+    .tablinks {
+        justify-content: flex-end;
+        color: #ccc;
+    }
+</style>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #014d8b;">
+        <a class="navbar-brand" href="#">CORONAVIRUS</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="tab" style="height:100% ; width:100%; z-index: 2; ">
+            <button class="tablinks" onclick="openCity(event, 'chart')">Charts</button>
+            <button class="tablinks" onclick="openCity(event, 'clustermap')">Cluster Map</button>
+            <button class="tablinks active" onclick="openCity(event, 'map')">Spread Map</button>
+        </div>
+    </nav>
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="col-md-3 anyClass" style="margin-top: 20px;">
+                <button type="button" class="list-group-item list-group-item-action active"
+                    style="background-color: #014d8b;">
+                    OUTBREAK STATUS
+                </button>
+                <div class="list-group " data-spy="scroll">
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="row">
+                    <div style=" height: 30vh; ">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card text-white bg-warning h-80  " style="width: 13rem;margin-top: 20px;">
+                                    <div class="card-header">Total Cases</div>
+                                    <div class="card-body">
+                                        <svg class="bi bi-lightning-fill float-left" width="2em" height="2em"
+                                            viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M11.251.068a.5.5 0 01.227.58L9.677 6.5H13a.5.5 0 01.364.843l-8 8.5a.5.5 0 01-.842-.49L6.323 9.5H3a.5.5 0 01-.364-.843l8-8.5a.5.5 0 01.615-.09z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        <p id="cases" class="card-text float-right"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-warning h-80 " style="width: 13rem;margin-top: 20px;">
+                                    <div class="card-header">New Cases</div>
+                                    <div class="card-body">
+                                        <svg class="bi bi-clock-history float-left" width="2em" height="2em"
+                                            viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M8.515 1.019A7 7 0 008 1V0a8 8 0 01.589.022l-.074.997zm2.004.45a7.003 7.003 0 00-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 00-.439-.27l.493-.87a8.025 8.025 0 01.979.654l-.615.789a6.996 6.996 0 00-.418-.302zm1.834 1.79a6.99 6.99 0 00-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 00-.214-.468l.893-.45a7.976 7.976 0 01.45 1.088l-.95.313a7.023 7.023 0 00-.179-.483zm.53 2.507a6.991 6.991 0 00-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 01-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 01-.401.432l-.707-.707z"
+                                                clip-rule="evenodd" />
+                                            <path fill-rule="evenodd"
+                                                d="M8 1a7 7 0 104.95 11.95l.707.707A8.001 8.001 0 118 0v1z"
+                                                clip-rule="evenodd" />
+                                            <path fill-rule="evenodd"
+                                                d="M7.5 3a.5.5 0 01.5.5v5.21l3.248 1.856a.5.5 0 01-.496.868l-3.5-2A.5.5 0 017 9V3.5a.5.5 0 01.5-.5z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        <p id="newcases" class="card-text float-right"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-danger h-80" style="width: 13rem;margin-top: 20px;">
+                                    <div class="card-header">Total Deaths</div>
+                                    <div class="card-body">
+                                        <svg class="bi bi-exclamation-octagon-fill float-left" width="2em" height="2em"
+                                            viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M11.46.146A.5.5 0 0011.107 0H4.893a.5.5 0 00-.353.146L.146 4.54A.5.5 0 000 4.893v6.214a.5.5 0 00.146.353l4.394 4.394a.5.5 0 00.353.146h6.214a.5.5 0 00.353-.146l4.394-4.394a.5.5 0 00.146-.353V4.893a.5.5 0 00-.146-.353L11.46.146zM8 4a.905.905 0 00-.9.995l.35 3.507a.552.552 0 001.1 0l.35-3.507A.905.905 0 008 4zm.002 6a1 1 0 100 2 1 1 0 000-2z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        <p id="totaldeaths" class="card-text float-right"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-danger h-80 " style="width: 13rem;margin-top: 20px;">
+                                    <div class="card-header">New Deaths</div>
+                                    <div class="card-body">
+                                        <svg class="bi bi-clock-history float-left" width="2em" height="2em"
+                                            viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M8.515 1.019A7 7 0 008 1V0a8 8 0 01.589.022l-.074.997zm2.004.45a7.003 7.003 0 00-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 00-.439-.27l.493-.87a8.025 8.025 0 01.979.654l-.615.789a6.996 6.996 0 00-.418-.302zm1.834 1.79a6.99 6.99 0 00-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 00-.214-.468l.893-.45a7.976 7.976 0 01.45 1.088l-.95.313a7.023 7.023 0 00-.179-.483zm.53 2.507a6.991 6.991 0 00-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 01-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 01-.401.432l-.707-.707z"
+                                                clip-rule="evenodd" />
+                                            <path fill-rule="evenodd"
+                                                d="M8 1a7 7 0 104.95 11.95l.707.707A8.001 8.001 0 118 0v1z"
+                                                clip-rule="evenodd" />
+                                            <path fill-rule="evenodd"
+                                                d="M7.5 3a.5.5 0 01.5.5v5.21l3.248 1.856a.5.5 0 01-.496.868l-3.5-2A.5.5 0 017 9V3.5a.5.5 0 01.5-.5z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        <p id="newdeaths" class="card-text float-right"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="map" class="col-md-12 tabcontent" style="height: 70vh"></div>
+                    <div id="clustermap" class="col-md-12 tabcontent" style="display:none;height: 70vh"></div>
+                    <div id='console' style="display:none">
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #66ff66 ;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>1 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #006600;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>500 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #4db8ff;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>5000 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color:  #4747d1;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>20.000 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #bf00ff;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>50.000 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #ff5c33;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>100.000 </p>
+                        </div>
+                        <div id='console-row' class="row">
+                            <span class="dot" style="background-color: #ff0000;"></span>
+                            <p style="margin-left:30px; color: #2dc4b2;font-size:12px;"> Number of cases>250.000 </p>
+                        </div>
+                    </div>
+                    <div id="chart" class="col-md-12 tabcontent" style=" display:none ">
+                        <div class="row">
+                            <div id="casechart" class="col-md-6">
+                                <canvas id="myChart" width="400" height="400"></canvas>
+                            </div>
+                            <div id="deathchart" class="col-md-6">
+                                <canvas id="newdeathChart" width="400" height="400"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <pre id="coordinates" class="coordinates"></pre>
+        </div>
+    </div>
+    <script>
+    </script>
+</body>
+
+</html>
